@@ -1,0 +1,12 @@
+Runs the standard infrastructure deployment pipeline.
+
+The pipeline validates configuration before allocating an agent, builds and stashes an
+immutable artifact, waits for approval outside a node, deploys to an allow-listed
+environment, verifies health, archives evidence, and attempts rollback when a mutation
+has started and a later deployment stage fails.
+
+Use a version-pinned Shared Library reference:
+
+    @Library('infra-ops-pipeline@v0.1.0') _
+
+See examples/consumer-project/Jenkinsfile for the full configuration contract.

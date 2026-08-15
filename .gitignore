@@ -1,0 +1,8 @@
+.gradle/
+.idea/
+.vscode/
+build/
+out/
+evidence/
+*.log
+*.tmp

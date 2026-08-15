@@ -1,0 +1,1 @@
+PASS: 12 required files and pipeline safety invariants validated.

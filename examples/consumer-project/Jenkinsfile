@@ -1,0 +1,89 @@
+@Library('__LIBRARY_NAME__@__LIBRARY_VERSION__') _
+
+infraPipeline(
+    applicationName: '__APPLICATION_NAME__',
+    buildAgent: '__BUILD_AGENT__',
+    deployAgent: '__DEPLOY_AGENT__',
+    defaultEnvironment: 'dev',
+    pipelineTimeoutMinutes: 60,
+    stageTimeoutMinutes: 20,
+    approvalTimeoutMinutes: 15,
+    rollbackOnFailure: true,
+
+    commands: [
+        restore: "dotnet restore '__PROJECT_FILE__'",
+        build: "dotnet build '__PROJECT_FILE__' --no-restore --configuration Release",
+        test: "dotnet test '__TEST_PROJECT_FILE__' --configuration Release --logger 'trx;LogFileName=tests.trx'",
+        package: "dotnet publish '__PROJECT_FILE__' --no-build --configuration Release --output out"
+    ],
+
+    artifactIncludes: 'out/**/*,ops/**/*,deploy/**/*',
+    archiveArtifacts: 'out/**/*',
+    evidenceIncludes: 'evidence/**/*',
+    testResults: '**/*.trx',
+
+    environments: [
+        dev: [
+            approvalRequired: false,
+            deployCommand: 'bash ops/deploy.sh',
+            verifyCommand: 'bash ops/verify.sh',
+            rollbackCommand: 'bash ops/rollback.sh',
+            variables: [
+                HEALTH_URL: 'https://dev.example.internal/health',
+                CONTAINER_REGISTRY: 'registry.example.internal',
+                COMPOSE_PROJECT_NAME: '__APPLICATION_NAME__-dev',
+                PREVIOUS_IMAGE_TAG: '<resolve-from-release-registry>'
+            ],
+            credentials: [[
+                type: 'usernamePassword',
+                id: 'container-registry-dev',
+                usernameVariable: 'REGISTRY_USERNAME',
+                passwordVariable: 'REGISTRY_PASSWORD'
+            ]]
+        ],
+        uat: [
+            approvalRequired: true,
+            migrationApprovalRequired: true,
+            migrationCommand: 'bash ops/migrate.sh',
+            deployCommand: 'bash ops/deploy.sh',
+            verifyCommand: 'bash ops/verify.sh',
+            smokeTestCommand: 'bash ops/smoke-test.sh',
+            rollbackCommand: 'bash ops/rollback.sh',
+            variables: [
+                HEALTH_URL: 'https://uat.example.internal/health',
+                CONTAINER_REGISTRY: 'registry.example.internal',
+                COMPOSE_PROJECT_NAME: '__APPLICATION_NAME__-uat',
+                PREVIOUS_IMAGE_TAG: '<resolve-from-release-registry>',
+                MIGRATION_COMMAND: '<replace-with-idempotent-migration-command>'
+            ],
+            credentials: [[
+                type: 'usernamePassword',
+                id: 'container-registry-uat',
+                usernameVariable: 'REGISTRY_USERNAME',
+                passwordVariable: 'REGISTRY_PASSWORD'
+            ]]
+        ],
+        prod: [
+            approvalRequired: true,
+            migrationApprovalRequired: true,
+            migrationCommand: 'bash ops/migrate.sh',
+            deployCommand: 'bash ops/deploy.sh',
+            verifyCommand: 'bash ops/verify.sh',
+            smokeTestCommand: 'bash ops/smoke-test.sh',
+            rollbackCommand: 'bash ops/rollback.sh',
+            variables: [
+                HEALTH_URL: 'https://service.example.com/health',
+                CONTAINER_REGISTRY: 'registry.example.internal',
+                COMPOSE_PROJECT_NAME: '__APPLICATION_NAME__-prod',
+                PREVIOUS_IMAGE_TAG: '<resolve-from-release-registry>',
+                MIGRATION_COMMAND: '<replace-with-idempotent-migration-command>'
+            ],
+            credentials: [[
+                type: 'usernamePassword',
+                id: 'container-registry-prod',
+                usernameVariable: 'REGISTRY_USERNAME',
+                passwordVariable: 'REGISTRY_PASSWORD'
+            ]]
+        ]
+    ]
+)
