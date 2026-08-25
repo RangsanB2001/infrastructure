@@ -26,6 +26,18 @@ pipeline {
                 }
             }
         }
+
+        stage('Validate Bytebase POC') {
+            steps {
+                script {
+                    if (isUnix()) {
+                        sh 'pwsh -NoLogo -NoProfile -File ./tests/bytebase-poc-tests.ps1'
+                    } else {
+                        powershell './tests/bytebase-poc-tests.ps1'
+                    }
+                }
+            }
+        }
     }
 
     post {
