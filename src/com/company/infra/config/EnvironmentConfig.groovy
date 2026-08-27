@@ -1,5 +1,7 @@
 package com.company.infra.config
 
+import com.cloudbees.groovy.cps.NonCPS
+
 class EnvironmentConfig implements Serializable {
     final String name
     final String agentLabel
@@ -29,10 +31,12 @@ class EnvironmentConfig implements Serializable {
         }
     }
 
+    @NonCPS
     private static String text(Object value) {
         value == null ? '' : value.toString().trim()
     }
 
+    @NonCPS
     private static boolean bool(Object value, boolean defaultValue) {
         value == null ? defaultValue : value as boolean
     }

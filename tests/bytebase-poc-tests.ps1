@@ -71,6 +71,17 @@ if (Test-Path -LiteralPath $jenkinsPath -PathType Leaf) {
     Assert-Poc (-not ($jenkins -match '(?i)@latest')) 'Bytebase POC must not use an unpinned Shared Library version'
 }
 
+$pipelineConfigPath = Join-Path $root 'src\com\company\infra\config\PipelineConfig.groovy'
+$environmentConfigPath = Join-Path $root 'src\com\company\infra\config\EnvironmentConfig.groovy'
+foreach ($configPath in @($pipelineConfigPath, $environmentConfigPath)) {
+    Assert-Poc (Test-Path -LiteralPath $configPath -PathType Leaf) "Missing shared-library config class: $configPath"
+    if (Test-Path -LiteralPath $configPath -PathType Leaf) {
+        $configSource = Get-Content -LiteralPath $configPath -Raw
+        Assert-Poc ($configSource.Contains('import com.cloudbees.groovy.cps.NonCPS')) "Config constructor helpers must import NonCPS: $configPath"
+        Assert-Poc ($configSource -match '(?s)@NonCPS\s+private static String text') "text helper must be NonCPS because constructors cannot invoke CPS methods: $configPath"
+    }
+}
+
 $migrationScriptPath = Join-Path $pocRoot 'ops\bytebase-migrate.sh'
 if (Test-Path -LiteralPath $migrationScriptPath -PathType Leaf) {
     $migrationScript = Get-Content -LiteralPath $migrationScriptPath -Raw

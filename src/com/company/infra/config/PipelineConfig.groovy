@@ -1,5 +1,7 @@
 package com.company.infra.config
 
+import com.cloudbees.groovy.cps.NonCPS
+
 class PipelineConfig implements Serializable {
     private static final Set<String> RESERVED_VARIABLES = [
         'APPLICATION_NAME',
@@ -148,21 +150,25 @@ class PipelineConfig implements Serializable {
         }
     }
 
+    @NonCPS
     private static Map<String, String> normalizeStringMap(Map raw) {
         raw.collectEntries { key, value -> [(key.toString()): text(value)] }
     }
 
+    @NonCPS
     private static int positiveInt(Object value, int defaultValue) {
         int parsed = value == null ? defaultValue : value as int
         parsed > 0 ? parsed : defaultValue
     }
 
+    @NonCPS
     private static void requireText(List<String> errors, String field, String value) {
         if (!value?.trim()) {
             errors << "${field} is required"
         }
     }
 
+    @NonCPS
     private static String text(Object value) {
         value == null ? '' : value.toString().trim()
     }
