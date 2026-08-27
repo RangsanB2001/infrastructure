@@ -83,8 +83,22 @@ $literalSecretPattern = '(?im)^\s*(password|passwd|api[_-]?key|client[_-]?secret
 
 foreach ($file in $codeFiles) {
     $content = Get-Content -LiteralPath $file.FullName -Raw
-    $relative = [System.IO.Path]::GetRelativePath($root, $file.FullName)
+    if ([System.IO.Path].GetMethods().Name -contains 'GetRelativePath') {
+        $relative = [System.IO.Path]::GetRelativePath($root, $file.FullName)
+    } else {
+        $relative = $file.FullName.Substring($root.Length).TrimStart('\', '/')
+    }
     Assert-Template (-not ($content -match $literalSecretPattern)) "Possible literal secret in $relative"
+}
+
+function Write-ValidationReport {
+    param([Parameter(Mandatory)] [string] $Value)
+
+    [System.IO.File]::WriteAllText(
+        $reportPath,
+        $Value + [Environment]::NewLine,
+        [System.Text.UTF8Encoding]::new($false)
+    )
 }
 
 $referencePath = Join-Path $root 'docs\infra-operations-deployment-pipeline-playbook.docx'
@@ -95,11 +109,11 @@ if (Test-Path -LiteralPath $referencePath -PathType Leaf) {
 New-Item -ItemType Directory -Path $reportDirectory -Force | Out-Null
 if ($failures.Count -gt 0) {
     $message = "FAILED`n - " + ($failures -join "`n - ")
-    Set-Content -LiteralPath $reportPath -Value $message -Encoding utf8NoBOM
+    Write-ValidationReport $message
     Write-Error $message
     exit 1
 }
 
 $success = "PASS: $($requiredFiles.Count) required files and pipeline safety invariants validated."
-Set-Content -LiteralPath $reportPath -Value $success -Encoding utf8NoBOM
+Write-ValidationReport $success
 Write-Host $success

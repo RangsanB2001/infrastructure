@@ -4,5 +4,8 @@
 build/
 out/
 evidence/
+.env
+.docker-config-test/
+tests/reports/bytebase-poc-validation.txt
 *.log
 *.tmp

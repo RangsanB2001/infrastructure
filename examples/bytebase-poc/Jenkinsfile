@@ -1,0 +1,51 @@
+@Library('infra-ops-pipeline@b2fd0ae1ab4c9b2ec2f410f96cd3a44ce839949d') _
+
+infraPipeline(
+    applicationName: 'bytebase-migration-poc',
+    buildAgent: 'linux && docker',
+    deployAgent: 'linux && docker',
+    defaultEnvironment: 'dev',
+    pipelineTimeoutMinutes: 45,
+    stageTimeoutMinutes: 20,
+    approvalTimeoutMinutes: 15,
+
+    // A failed application deploy cannot safely reverse an already committed schema change.
+    rollbackOnFailure: false,
+
+    commands: [
+        build: 'cd examples/bytebase-poc && bash ops/validate-migrations.sh',
+        test: 'cd examples/bytebase-poc && bash ops/acceptance-test.sh static',
+        package: 'cd examples/bytebase-poc && bash ops/package.sh'
+    ],
+
+    artifactIncludes: 'examples/bytebase-poc/out/**/*,examples/bytebase-poc/migrations/**/*,examples/bytebase-poc/ops/**/*,examples/bytebase-poc/compose.yaml,examples/bytebase-poc/.env.example',
+    archiveArtifacts: 'examples/bytebase-poc/out/**/*',
+    evidenceIncludes: 'examples/bytebase-poc/evidence/**/*',
+
+    environments: [
+        dev: [
+            approvalRequired: false,
+            migrationApprovalRequired: false,
+            migrationCommand: 'cd examples/bytebase-poc && bash ops/bytebase-migrate.sh',
+            deployCommand: 'cd examples/bytebase-poc && bash ops/noop-deploy.sh',
+            verifyCommand: 'cd examples/bytebase-poc && bash ops/acceptance-test.sh live',
+            variables: [
+                BYTEBASE_URL: 'http://bytebase:8080',
+                BYTEBASE_PROJECT: 'projects/poc-mrigation-ci-cd-7nxf',
+                BYTEBASE_TARGETS: 'instances/homelab-postgres-d8hm/databases/homelab_app',
+                BYTEBASE_TARGET_STAGE: 'environments/dev',
+                BYTEBASE_DOCKER_NETWORK: 'bytebase-poc',
+                BYTEBASE_ACTION_IMAGE: 'bytebase/bytebase-action:3.20.0',
+                COMPOSE_PROJECT_NAME: 'bytebase-poc',
+                POC_POSTGRES_DB: 'homelab_app',
+                POC_POSTGRES_USER: 'bytebase_poc'
+            ],
+            credentials: [[
+                type: 'usernamePassword',
+                id: 'bytebase-homelab-ci',
+                usernameVariable: 'BYTEBASE_SERVICE_ACCOUNT',
+                passwordVariable: 'BYTEBASE_SERVICE_ACCOUNT_SECRET'
+            ]]
+        ]
+    ]
+)

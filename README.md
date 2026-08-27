@@ -143,3 +143,17 @@ container, .NET/Python/Go tool หรือ deployment tool ของระบ�
 สำหรับ Kubernetes, Windows Service, Terraform หรือ data pipeline ให้เปลี่ยน external
 commands โดยรักษา success/failure contract เดิม ไม่เพิ่มเงื่อนไขตามชื่อ application ใน
 Shared Library
+
+## Bytebase database migration POC
+
+ตัวอย่าง POC สำหรับ HomeLab อยู่ที่ [`examples/bytebase-poc`](examples/bytebase-poc/README.md)
+โดย reuse `migrationCommand` ของ Shared Library เดิม และเปลี่ยนผู้ execute migration จาก
+Jenkins/`psql` เป็น Bytebase:
+
+```text
+Jenkins -> bytebase-action -> Bytebase SQL review/rollout -> PostgreSQL
+```
+
+POC ประกอบด้วย Compose stack สำหรับ Bytebase + PostgreSQL, migration แบบ versioned,
+Jenkinsfile ตัวอย่าง, static/live acceptance tests และ runbook ที่
+[`docs/BYTEBASE-POC-RUNBOOK.md`](docs/BYTEBASE-POC-RUNBOOK.md)
