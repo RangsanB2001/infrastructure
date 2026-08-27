@@ -49,25 +49,28 @@ PostgreSQL
    docker compose --env-file .env ps
    ```
 
-3. เปิด `http://localhost:8080` แล้วทำ first-time setup ตาม runbook: เพิ่ม instance
-   `homelab-postgres`, project `homelab`, environment `dev` และ project-level service
-   account ที่มี role `GitOps Service Agent`
+3. เปิด Bytebase แล้วทำ first-time setup ตาม runbook: เพิ่ม instance
+   `homelab-postgres` ที่ `100.102.222.59:5432`, database `homelab_db`, environment
+   `dev` และ project-level service account ที่มี role `GitOps Service Agent`
 
 4. สร้าง Jenkins credential ชนิด Username with password ID `bytebase-homelab-ci`:
 
    - Username: email ของ Bytebase service account
    - Password: service key ที่ Bytebase แสดงตอนสร้าง account
 
+   และสร้าง credential ID `homelab-postgres-verify` สำหรับ PostgreSQL user แบบ
+   read-only ที่ Jenkins ใช้ยืนยัน schema หลัง rollout
+
 5. สร้าง Jenkins Pipeline from SCM โดยใช้ `examples/bytebase-poc/Jenkinsfile` แล้วรัน:
 
    - `TARGET_ENV=dev`, `DRY_RUN=true` เพื่อตรวจ SQL โดยไม่เปลี่ยน schema
    - `TARGET_ENV=dev`, `DRY_RUN=false` เพื่อ rollout ผ่าน Bytebase
 
-6. ตรวจผล:
+6. ตรวจผลจาก PostgreSQL จริง:
 
    ```powershell
-   docker compose --env-file .env exec postgres `
-     psql -U bytebase_poc -d homelab_app -c '\d public.customer'
+   psql -h 100.102.222.59 -p 5432 -U <verify-user> -d homelab_db `
+     -c '\d public.customer'
    ```
 
 รายละเอียด Jenkins agent/network, Bytebase policy, acceptance criteria และ cleanup อยู่ใน
@@ -93,7 +96,8 @@ Bytebase ใช้ revision history และ checksum เพื่อป้อ�
 
 ## Safety boundary
 
-- Jenkins ถือเฉพาะ Bytebase service account; ไม่มี PostgreSQL password ใน Jenkinsfile
+- Jenkins ถือ Bytebase service account และ PostgreSQL read-only verification credential
+  ผ่าน Jenkins Credentials; ไม่มี password ใน Jenkinsfile
 - `ops/bytebase-migrate.sh` ไม่เรียก `psql`
 - การ query PostgreSQL ใน `verify-migration.sh` เป็น read-only acceptance check หลัง rollout
 - POC ปิด automatic schema rollback เพราะ application rollback ไม่สามารถย้อน DDL ที่ commit

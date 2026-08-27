@@ -32,20 +32,30 @@ infraPipeline(
             variables: [
                 BYTEBASE_URL: 'http://bytebase:8080',
                 BYTEBASE_PROJECT: 'projects/poc-mrigation-ci-cd-7nxf',
-                BYTEBASE_TARGETS: 'instances/homelab-postgres-d8hm/databases/homelab_app',
+                BYTEBASE_TARGETS: 'instances/homelab-postgres-d8hm/databases/homelab_db',
                 BYTEBASE_TARGET_STAGE: 'environments/dev',
                 BYTEBASE_DOCKER_NETWORK: 'bytebase-poc',
                 BYTEBASE_ACTION_IMAGE: 'bytebase/bytebase-action:3.20.0',
                 COMPOSE_PROJECT_NAME: 'bytebase-poc',
-                POC_POSTGRES_DB: 'homelab_app',
-                POC_POSTGRES_USER: 'bytebase_poc'
+                POC_POSTGRES_HOST: '100.102.222.59',
+                POC_POSTGRES_PORT: '5432',
+                POC_POSTGRES_DB: 'homelab_db',
+                POC_POSTGRES_CLIENT_IMAGE: 'postgres:17.6-alpine'
             ],
-            credentials: [[
-                type: 'usernamePassword',
-                id: 'bytebase-homelab-ci',
-                usernameVariable: 'BYTEBASE_SERVICE_ACCOUNT',
-                passwordVariable: 'BYTEBASE_SERVICE_ACCOUNT_SECRET'
-            ]]
+            credentials: [
+                [
+                    type: 'usernamePassword',
+                    id: 'bytebase-homelab-ci',
+                    usernameVariable: 'BYTEBASE_SERVICE_ACCOUNT',
+                    passwordVariable: 'BYTEBASE_SERVICE_ACCOUNT_SECRET'
+                ],
+                [
+                    type: 'usernamePassword',
+                    id: 'homelab-postgres-verify',
+                    usernameVariable: 'POC_POSTGRES_USER',
+                    passwordVariable: 'POC_POSTGRES_PASSWORD'
+                ]
+            ]
         ]
     ]
 )

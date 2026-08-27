@@ -1,10 +1,6 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-: "${COMPOSE_PROJECT_NAME:?COMPOSE_PROJECT_NAME is required}"
-: "${POC_POSTGRES_DB:?POC_POSTGRES_DB is required}"
-: "${POC_POSTGRES_USER:?POC_POSTGRES_USER is required}"
-
 mkdir -p evidence
 
 if [[ "${DRY_RUN:-true}" == 'true' ]]; then
@@ -13,16 +9,22 @@ if [[ "${DRY_RUN:-true}" == 'true' ]]; then
     exit 0
 fi
 
-# Compose requires the variable while parsing, but the read-only check runs through
-# the local socket inside the existing PostgreSQL container and never uses this value.
-export POSTGRES_PASSWORD="${POSTGRES_PASSWORD:-not-used-for-local-verification}"
+: "${POC_POSTGRES_HOST:?POC_POSTGRES_HOST is required}"
+: "${POC_POSTGRES_PORT:?POC_POSTGRES_PORT is required}"
+: "${POC_POSTGRES_DB:?POC_POSTGRES_DB is required}"
+: "${POC_POSTGRES_USER:?POC_POSTGRES_USER is required}"
+: "${POC_POSTGRES_PASSWORD:?POC_POSTGRES_PASSWORD is required}"
+: "${POC_POSTGRES_CLIENT_IMAGE:?POC_POSTGRES_CLIENT_IMAGE is required}"
+
+export PGPASSWORD="${POC_POSTGRES_PASSWORD}"
 
 psql_in_postgres() {
-    docker compose \
-        --project-name "${COMPOSE_PROJECT_NAME}" \
-        -f compose.yaml \
-        exec -T postgres \
+    docker run --rm \
+        --env PGPASSWORD \
+        "${POC_POSTGRES_CLIENT_IMAGE}" \
         psql \
+        --host "${POC_POSTGRES_HOST}" \
+        --port "${POC_POSTGRES_PORT}" \
         --username "${POC_POSTGRES_USER}" \
         --dbname "${POC_POSTGRES_DB}" \
         --set ON_ERROR_STOP=1 \

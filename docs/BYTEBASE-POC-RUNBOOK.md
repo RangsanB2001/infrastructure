@@ -71,13 +71,13 @@ docker compose --env-file .env logs --tail 100 bytebase
 3. เพิ่ม PostgreSQL instance:
    - Instance name: `homelab-postgres`
    - Resource ID used by this HomeLab: `homelab-postgres-d8hm`
-   - Host: `postgres`
+   - Host: `100.102.222.59`
    - Port: `5432`
-   - Username / Password: `POSTGRES_USER` และ `POSTGRES_PASSWORD` จาก `.env`
+   - Username / Password: PostgreSQL migration user ของ HomeLab
    - Environment: `dev`
-4. ตรวจว่า Bytebase discover database `homelab_app`
+4. ตรวจว่า Bytebase discover database `homelab_db`
 5. ใช้ project ชื่อ `poc-mrigation-ci-cd` (resource ID `poc-mrigation-ci-cd-7nxf`)
-   แล้ว transfer `homelab_app` เข้า project
+   แล้ว transfer `homelab_db` เข้า project
 6. ใน project settings สำหรับ POC:
    - เปิด `Require plan check no error`
    - ปิด `Require issue approval` เฉพาะ environment `dev` เพื่อให้ Jenkins รัน POC จบได้
@@ -88,7 +88,7 @@ resource names ต้องตรง `examples/bytebase-poc/Jenkinsfile`:
 
 ```text
 projects/poc-mrigation-ci-cd-7nxf
-instances/homelab-postgres-d8hm/databases/homelab_app
+instances/homelab-postgres-d8hm/databases/homelab_db
 environments/dev
 ```
 
@@ -112,6 +112,16 @@ environments/dev
 | ID | `bytebase-homelab-ci` |
 | Username | service account email |
 | Password | Bytebase service key |
+| Scope | folder/job ของ POC |
+
+สร้าง credential เพิ่มสำหรับการตรวจ schema หลัง rollout:
+
+| Field | Value |
+| --- | --- |
+| Kind | Username with password |
+| ID | `homelab-postgres-verify` |
+| Username | PostgreSQL user แบบ read-only สำหรับ `homelab_db` |
+| Password | รหัสของ verification user |
 | Scope | folder/job ของ POC |
 
 Jenkins Shared Library จะ bind credential เฉพาะ migration/deploy node และ mask ค่าใน log
@@ -201,9 +211,12 @@ agent ให้มี `evidence/bytebase-rollout.json` แล้วรัน:
 
 ```bash
 DRY_RUN=false \
-COMPOSE_PROJECT_NAME=bytebase-poc \
-POC_POSTGRES_DB=homelab_app \
-POC_POSTGRES_USER=bytebase_poc \
+POC_POSTGRES_HOST=100.102.222.59 \
+POC_POSTGRES_PORT=5432 \
+POC_POSTGRES_DB=homelab_db \
+POC_POSTGRES_USER='<verify-user>' \
+POC_POSTGRES_PASSWORD='<password>' \
+POC_POSTGRES_CLIENT_IMAGE=postgres:17.6-alpine \
 bash ops/acceptance-test.sh live
 ```
 

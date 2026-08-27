@@ -68,7 +68,18 @@ if (Test-Path -LiteralPath $jenkinsPath -PathType Leaf) {
     Assert-Poc ($jenkins.Contains("id: 'bytebase-homelab-ci'")) 'Jenkins must reference the Bytebase credential by ID'
     Assert-Poc ($jenkins.Contains("usernameVariable: 'BYTEBASE_SERVICE_ACCOUNT'")) 'Bytebase service account variable binding is missing'
     Assert-Poc ($jenkins.Contains("passwordVariable: 'BYTEBASE_SERVICE_ACCOUNT_SECRET'")) 'Bytebase service key variable binding is missing'
+    Assert-Poc ($jenkins.Contains("id: 'homelab-postgres-verify'")) 'Jenkins must reference the PostgreSQL verification credential by ID'
+    Assert-Poc ($jenkins.Contains("BYTEBASE_TARGETS: 'instances/homelab-postgres-d8hm/databases/homelab_db'")) 'Jenkins must target the HomeLab database registered in Bytebase'
+    Assert-Poc ($jenkins.Contains("POC_POSTGRES_HOST: '100.102.222.59'")) 'Live verification must target the HomeLab PostgreSQL host'
     Assert-Poc (-not ($jenkins -match '(?i)@latest')) 'Bytebase POC must not use an unpinned Shared Library version'
+}
+
+$verificationScriptPath = Join-Path $pocRoot 'ops\verify-migration.sh'
+if (Test-Path -LiteralPath $verificationScriptPath -PathType Leaf) {
+    $verificationScript = Get-Content -LiteralPath $verificationScriptPath -Raw
+    Assert-Poc ($verificationScript.Contains('POC_POSTGRES_HOST')) 'Verification script must use the configured PostgreSQL host'
+    Assert-Poc ($verificationScript.Contains('--env PGPASSWORD')) 'Verification password must be passed through the container environment'
+    Assert-Poc (-not ($verificationScript.Contains('docker compose'))) 'Live verification must not query the bundled POC PostgreSQL service'
 }
 
 $pipelineConfigPath = Join-Path $root 'src\com\company\infra\config\PipelineConfig.groovy'
