@@ -1,4 +1,4 @@
-@Library('infra-ops-pipeline@35b5d7e5ec74044684982ff3c5779123acfffdf0') _
+@Library('infra-ops-pipeline@b2fd0ae1ab4c9b2ec2f410f96cd3a44ce839949d') _
 
 infraPipeline(
     applicationName: 'bytebase-migration-poc',

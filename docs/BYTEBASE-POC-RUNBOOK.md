@@ -20,7 +20,7 @@ POC นี้เป็น schema-only consumer จึงใช้ `noop-deploy.s
 
 | Component | Version / contract | หน้าที่ |
 | --- | --- | --- |
-| Jenkins Shared Library | commit `35b5d7e5ec74044684982ff3c5779123acfffdf0` | orchestration, dry-run, credential scope, evidence |
+| Jenkins Shared Library | commit `b2fd0ae1ab4c9b2ec2f410f96cd3a44ce839949d` | orchestration, dry-run, credential scope, evidence |
 | Bytebase server | `3.20.0` | SQL review, release, plan, rollout, audit/revision |
 | bytebase-action | `3.20.0` | CI client ที่ Jenkins เรียกผ่าน ephemeral container |
 | PostgreSQL | `17.6-alpine` | target database ของ POC |
