@@ -38,6 +38,7 @@ run_bytebase_action() {
             --env BYTEBASE_SERVICE_ACCOUNT \
             --env BYTEBASE_SERVICE_ACCOUNT_SECRET \
             "${BYTEBASE_ACTION_IMAGE}" \
+            bytebase-action \
             "${command_name}" \
             --url "${BYTEBASE_URL}" \
             --project "${BYTEBASE_PROJECT}" \
