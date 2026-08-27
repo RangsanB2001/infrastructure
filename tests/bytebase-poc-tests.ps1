@@ -91,6 +91,8 @@ if (Test-Path -LiteralPath $migrationScriptPath -PathType Leaf) {
     Assert-Poc ($migrationScript.Contains('FAIL_ON_ERROR')) 'SQL review errors must fail the pipeline'
     Assert-Poc (-not ($migrationScript -match '(?i)\bpsql\b')) 'Migration script must not execute SQL directly with psql'
     Assert-Poc (-not ($migrationScript.Contains('--service-account-secret'))) 'Service key must be passed as an environment variable, not a command argument'
+    Assert-Poc ($migrationScript.Contains('docker image inspect')) 'Migration script must resolve the action image before capturing docker create output'
+    Assert-Poc ($migrationScript -match 'action_container_id.*\[\[:xdigit:\]\]\{64\}') 'Migration script must validate the docker create container ID'
 }
 
 $migrationFiles = @(Get-ChildItem -LiteralPath (Join-Path $pocRoot 'migrations') -Filter '*.sql' -File | Sort-Object Name)

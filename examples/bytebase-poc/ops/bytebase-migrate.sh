@@ -27,7 +27,12 @@ run_bytebase_action() {
     local evidence_file="$2"
     shift 2
 
-    action_container_id="$({
+    if ! docker image inspect "${BYTEBASE_ACTION_IMAGE}" >/dev/null 2>&1; then
+        echo "Pulling Bytebase action image ${BYTEBASE_ACTION_IMAGE}..." >&2
+        docker pull "${BYTEBASE_ACTION_IMAGE}" >&2
+    fi
+
+    action_container_id="$(
         docker create \
             --network "${BYTEBASE_DOCKER_NETWORK}" \
             --env BYTEBASE_SERVICE_ACCOUNT \
@@ -40,11 +45,17 @@ run_bytebase_action() {
             --file-pattern '/migrations/*.sql' \
             --output /bytebase-result.json \
             "$@"
-    } 2>&1)" || {
-        echo "Unable to create the Bytebase action container: ${action_container_id}" >&2
+    )" || {
+        echo 'Unable to create the Bytebase action container.' >&2
         action_container_id=''
         return 20
     }
+
+    if [[ ! "${action_container_id}" =~ ^[[:xdigit:]]{64}$ ]]; then
+        echo 'docker create returned an invalid container ID.' >&2
+        action_container_id=''
+        return 21
+    fi
 
     docker cp "${migration_directory}" "${action_container_id}:/migrations"
 
