@@ -31,8 +31,8 @@ infraPipeline(
             verifyCommand: 'cd examples/bytebase-poc && bash ops/acceptance-test.sh live',
             variables: [
                 BYTEBASE_URL: 'http://bytebase:8080',
-                BYTEBASE_PROJECT: 'projects/homelab',
-                BYTEBASE_TARGETS: 'instances/homelab-postgres/databases/homelab_app',
+                BYTEBASE_PROJECT: 'projects/poc-mrigation-ci-cd-7nxf',
+                BYTEBASE_TARGETS: 'instances/homelab-postgres-d8hm/databases/homelab_app',
                 BYTEBASE_TARGET_STAGE: 'environments/dev',
                 BYTEBASE_DOCKER_NETWORK: 'bytebase-poc',
                 BYTEBASE_ACTION_IMAGE: 'bytebase/bytebase-action:3.20.0',

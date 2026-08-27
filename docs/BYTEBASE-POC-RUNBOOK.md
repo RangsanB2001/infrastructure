@@ -69,13 +69,15 @@ docker compose --env-file .env logs --tail 100 bytebase
 1. สร้าง workspace admin สำหรับ HomeLab
 2. สร้าง environment ชื่อ `Dev` และใช้ resource ID `dev`
 3. เพิ่ม PostgreSQL instance:
-   - Instance ID: `homelab-postgres`
+   - Instance name: `homelab-postgres`
+   - Resource ID used by this HomeLab: `homelab-postgres-d8hm`
    - Host: `postgres`
    - Port: `5432`
    - Username / Password: `POSTGRES_USER` และ `POSTGRES_PASSWORD` จาก `.env`
    - Environment: `dev`
 4. ตรวจว่า Bytebase discover database `homelab_app`
-5. สร้าง project ชื่อ/ID `homelab` แล้ว transfer `homelab_app` เข้า project
+5. ใช้ project ชื่อ `poc-mrigation-ci-cd` (resource ID `poc-mrigation-ci-cd-7nxf`)
+   แล้ว transfer `homelab_app` เข้า project
 6. ใน project settings สำหรับ POC:
    - เปิด `Require plan check no error`
    - ปิด `Require issue approval` เฉพาะ environment `dev` เพื่อให้ Jenkins รัน POC จบได้
@@ -85,8 +87,8 @@ docker compose --env-file .env logs --tail 100 bytebase
 resource names ต้องตรง `examples/bytebase-poc/Jenkinsfile`:
 
 ```text
-projects/homelab
-instances/homelab-postgres/databases/homelab_app
+projects/poc-mrigation-ci-cd-7nxf
+instances/homelab-postgres-d8hm/databases/homelab_app
 environments/dev
 ```
 
